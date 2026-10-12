@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>رحلة الإيمان 🌙</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;
+ font-family:Tahoma,Arial,sans-serif;
+ color:#fff;background:linear-gradient(150deg,#17113b,#382263,#754b91);
+ padding:20px 14px;
+}
+header{text-align:center;padding:14px 0 20px}
+.moon{font-size:55px;filter:drop-shadow(0 0 15px #ffe7a1)}
+h1{color:#ffe6a5;font-size:28px;margin:10px 0}
+header p{color:#e9d9ff;line-height:1.8}
+.container{max-width:520px;margin:auto}
+.card{
+ background:#ffffff12;border:1px solid #ffffff40;
+ border-radius:24px;padding:20px;
+ box-shadow:0 12px 35px #08051d55;
+ backdrop-filter:blur(8px);
+}
+.top{display:flex;justify-content:space-between;gap:8px;margin-bottom:18px}
+.badge{background:#ffffff17;padding:10px;border-radius:12px;font-size:14px}
+.progress{height:8px;background:#ffffff25;border-radius:20px;overflow:hidden;margin:14px 0 24px}
+#bar{height:100%;width:0;background:#ffe6a5;transition:.3s}
+#category{color:#ffe6a5;font-size:14px;margin-bottom:12px}
+#question{font-size:21px;line-height:1.8;margin:0 0 20px}
+.option{
+ display:block;width:100%;padding:15px;margin:10px 0;
+ border:1px solid #ffffff45;border-radius:15px;
+ background:#ffffff12;color:white;font-size:16px;
+ text-align:right;cursor:pointer;transition:.2s;
+}
+.option:active{transform:scale(.98)}
+.option.correct{background:#176b4c;border-color:#78e8b5}
+.option.wrong{background:#8a304f;border-color:#ff9db5}
+.option:disabled{cursor:default}
+#feedback{line-height:1.9;margin-top:14px;font-size:15px}
+button.main{
+ width:100%;border:0;border-radius:15px;padding:15px;
+ margin-top:16px;background:linear-gradient(100deg,#ffe8a3,#f6c9e5);
+ color:#34204f;font-size:17px;font-weight:bold;cursor:pointer
+}
+#next{display:none}
+#result{display:none;text-align:center}
+.big{font-size:58px}
+#final{font-size:28px;color:#ffe6a5;font-weight:bold}
+footer{text-align:center;color:#d9c8f2;font-size:12px;margin:20px 0}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+ <div class="moon">🌙</div>
+ <h1>رحلة الإيمان</h1>
+ <p>اختبري معلوماتك الدينية واجمعي الحسنات بالعلم النافع 🤍</p>
+</header>
+
+<section class="card" id="quiz">
+ <div class="top">
+  <div class="badge">📖 السؤال <span id="number">1</span>/<span id="total">15</span></div>
+  <div class="badge">⭐ النقاط: <span id="score">0</span></div>
+ </div>
+ <div class="progress"><div id="bar"></div></div>
+ <div id="category">القرآن الكريم</div>
+ <h2 id="question"></h2>
+ <div id="options"></div>
+ <div id="feedback" aria-live="polite"></div>
+ <button class="main" id="next" onclick="nextQuestion()">السؤال التالي ←</button>
+</section>
+
+<section class="card" id="result">
+ <div class="big">🏆</div>
+ <h2>أحسنتِ يا بطلة!</h2>
+ <p>خلصتي رحلة الأسئلة الدينية 🌸</p>
+ <div id="final"></div>
+ <p id="message"></p>
+ <button class="main" onclick="restart()">🔄 ابدئي من جديد</button>
+</section>
+<footer>اللهم زدنا علمًا نافعًا وعملاً صالحًا 🤍</footer>
+</div>
+
+<script>
+const questions=[
+{c:"القرآن الكريم",q:"ما السورة التي تُسمّى قلب القرآن؟",a:["سورة البقرة","سورة يس","سورة الرحمن"],correct:1,info:"اشتهرت سورة يس بهذا الاسم في بعض الروايات، لكن الحديث الوارد في تسميتها قلب القرآن ضعّفه عدد من أهل العلم."},
+{c:"القرآن الكريم",q:"كم عدد سور القرآن الكريم؟",a:["110 سور","114 سورة","120 سورة"],correct:1,info:"عدد سور القرآن الكريم 114 سورة."},
+{c:"الأنبياء",q:"من النبي الذي ابتلعه الحوت؟",a:["يونس عليه السلام","يوسف عليه السلام","هود عليه السلام"],correct:0,info:"ابتلع الحوت يونس عليه السلام، فدعا الله فنجّاه."},
+{c:"الأنبياء",q:"من النبي الذي كلّمه الله؟",a:["إبراهيم عليه السلام","موسى عليه السلام","إسماعيل عليه السلام"],correct:1,info:"كلّم الله موسى عليه السلام تكليمًا."},
+{c:"القرآن الكريم",q:"ما أول سورة في المصحف؟",a:["الفاتحة","البقرة","الإخلاص"],correct:0,info:"سورة الفاتحة هي أول سورة في ترتيب المصحف."},
+{c:"السيرة النبوية",q:"في أي مدينة وُلد النبي محمد ﷺ؟",a:["المدينة المنورة","مكة المكرمة","الطائف"],correct:1,info:"وُلد النبي محمد ﷺ في مكة المكرمة."},
+{c:"السيرة النبوية",q:"ما اسم أم النبي محمد ﷺ؟",a:["آمنة بنت وهب","خديجة بنت خويلد","حليمة السعدية"],correct:0,info:"والدة النبي ﷺ هي آمنة بنت وهب."},
+{c:"العبادات",q:"كم عدد الصلوات المفروضة في اليوم والليلة؟",a:["ثلاث صلوات","أربع صلوات","خمس صلوات"],correct:2,info:"الصلوات المفروضة خمس: الفجر والظهر والعصر والمغرب والعشاء."},
+{c:"العبادات",q:"في أي شهر يصوم المسلمون؟",a:["شعبان","رمضان","شوال"],correct:1,info:"صيام شهر رمضان فرض على المسلمين."},
+{c:"القرآن الكريم",q:"ما أطول سورة في القرآن الكريم؟",a:["آل عمران","النساء","البقرة"],correct:2,info:"سورة البقرة هي أطول سور القرآن الكريم."},
+{c:"الأنبياء",q:"من النبي الذي بنى السفينة بأمر الله؟",a:["نوح عليه السلام","داود عليه السلام","صالح عليه السلام"],correct:0,info:"أمر الله نوحًا عليه السلام بصنع السفينة."},
+{c:"العبادات",q:"إلى أي جهة يتجه المسلمون في الصلاة؟",a:["المسجد النبوي","الكعبة المشرفة","المسجد الأقصى دائمًا"],correct:1,info:"يتجه المسلمون في الصلاة نحو الكعبة المشرفة."},
+{c:"القرآن الكريم",q:"ما السورة التي تعدل ثلث القرآن في فضلها؟",a:["سورة الفلق","سورة الإخلاص","سورة الناس"],correct:1,info:"ورد في الحديث الصحيح أن سورة الإخلاص تعدل ثلث القرآن."},
+{c:"السيرة النبوية",q:"ما اسم الغار الذي نزل فيه الوحي أول مرة؟",a:["غار ثور","غار حراء","غار أحد"],correct:1,info:"نزل الوحي على النبي ﷺ في غار حراء."},
+{c:"الأخلاق الإسلامية",q:"ما التحية التي يحيّي بها المسلم أخاه؟",a:["صباح الخير فقط","السلام عليكم","إلى اللقاء"],correct:1,info:"من تحية الإسلام: السلام عليكم ورحمة الله وبركاته."}
+];
+
+let order=[],index=0,score=0,answered=false;
+const $=id=>document.getElementById(id);
+
+function shuffle(arr){
+ for(let i=arr.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+ }
+ return arr;
+}
+function start(){
+ order=shuffle([...questions.keys()]);
+ index=0;score=0;
+ $("score").textContent=score;
+ $("quiz").style.display="block";
+ $("result").style.display="none";
+ showQuestion();
+}
+function showQuestion(){
+ answered=false;
+ const q=questions[order[index]];
+ $("number").textContent=index+1;
+ $("total").textContent=order.length;
+ $("category").textContent="✨ "+q.c;
+ $("question").textContent=q.q;
+ $("bar").style.width=(index/order.length*100)+"%";
+ $("feedback").textContent="";
+ $("next").style.display="none";
+ $("options").innerHTML="";
+ q.a.forEach((answer,i)=>{
+  const b=document.createElement("button");
+  b.className="option";
+  b.textContent=["أ","ب","ج"][i]+" ـ "+answer;
+  b.onclick=()=>checkAnswer(i,b);
+  $("options").appendChild(b);
+ });
+}
+function checkAnswer(choice,button){
+ if(answered)return;
+ answered=true;
+ const q=questions[order[index]];
+ [...$("options").children].forEach((b,i)=>{
+  b.disabled=true;
+  if(i===q.correct)b.classList.add("correct");
+ });
+ if(choice===q.correct){
+  score+=10;
+  $("score").textContent=score;
+  $("feedback").textContent="🌟 إجابة صحيحة! أحسنتِ. "+q.info;
+ }else{
+  button.classList.add("wrong");
+  $("feedback").textContent="💗 الإجابة الصحيحة: "+q.a[q.correct]+". "+q.info;
+ }
+ $("bar").style.width=((index+1)/order.length*100)+"%";
+ $("next").style.display="block";
+ $("next").textContent=index===order.length-1?"عرض النتيجة 🏆":"السؤال التالي ←";
+}
+function nextQuestion(){
+ if(!answered)return;
+ index++;
+ if(index>=order.length){
+  $("quiz").style.display="none";
+  $("result").style.display="block";
+  $("final").textContent=score+" / "+(order.length*10);
+  $("message").textContent=score>=120?"ما شاء الله! معلوماتك ممتازة 🌙":score>=80?"ممتازة! كمّلي تعلّمك 🤍":"برافو على المحاولة! راجعي الإجابات وجرّبي تاني 🌷";
+ }else showQuestion();
+}
+function restart(){start()}
+start();
+</script>
+</body>
+</html>
